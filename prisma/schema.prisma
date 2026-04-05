@@ -1,0 +1,137 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  username  String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+
+  participants Participant[]
+  messages     Message[]
+
+  sentRequests  FriendRequest[] @relation("SentRequests")
+  receivedRequests FriendRequest[] @relation("ReceivedRequests")
+
+
+  @@index([username])
+}
+
+model FriendRequest {
+  id          String   @id @default(uuid())
+  senderId    String
+  receiverId  String
+  status      FriendStatus
+  createdAt   DateTime @default(now())
+
+  sender      User @relation("SentRequests", fields: [senderId], references: [id])
+  receiver    User @relation("ReceivedRequests", fields: [receiverId], references: [id])
+
+  @@unique([senderId, receiverId])
+  @@index([receiverId, status])
+}
+
+enum FriendStatus{
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model Conversation {
+  id        String   @id @default(uuid())
+  type      ConversationType
+  name      String?
+  createdAt DateTime @default(now())
+
+  participants Participant[]
+  messages     Message[]
+
+  @@index([type, name])
+  //the type, name order here is crucial
+}
+
+enum ConversationType {
+  DIRECT
+  GROUP
+}
+
+model Participant {
+  id             String @id @default(uuid())
+  userId         String
+  conversationId String
+  role           Role   @default(MEMBER)
+
+  user         User         @relation(fields: [userId], references: [id])
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+
+  @@unique([userId, conversationId])
+  @@index([conversationId])
+}
+
+enum Role {
+  ADMIN
+  MEMBER
+}
+
+model Message {
+  id             String   @id @default(uuid())
+  conversationId String
+  senderId       String
+
+  type MessageType
+
+  content  String?   // text or caption
+  fileUrl  String?   // media
+  fileName String?
+  fileSize Int?
+
+  createdAt DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+  sender       User         @relation(fields: [senderId], references: [id])
+
+  statuses MessageStatus[]
+
+  @@index([conversationId, createdAt])
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  VIDEO
+  AUDIO
+  FILE
+}
+
+model MessageStatus {
+  id        String   @id @default(uuid())
+  messageId String
+  userId    String
+  status    Status
+  updatedAt DateTime @updatedAt
+
+  message Message @relation(fields: [messageId], references: [id])
+
+  @@unique([messageId, userId])
+  @@index([userId, status])
+  //good for finding messages which are unread
+  
+}
+
+enum Status {
+  SENT
+  DELIVERED
+  SEEN
+}
