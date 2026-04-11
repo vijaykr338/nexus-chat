@@ -4,13 +4,19 @@ import { authMiddleware } from './src/middleware/auth.middleware.js';
 import type { Request, Response } from "express";
 import http from 'http';
 import { initSocket } from './src/config/socket.js';
-
+import uploadRoutes from './src/routes/upload.routes.js';
+import searchRoutes from './src/routes/search.routes.js';
+import conversationsRoutes from './src/routes/conversations.routes.js';
 
 const app = express();
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 //middleware to parse json
 app.use('/auth', authRoutes);
+app.use("/upload", uploadRoutes);
+app.use("/search", searchRoutes);
+app.use("/conversations", conversationsRoutes);
 
 //routes
 app.get('/', (req : Request, res : Response) => {

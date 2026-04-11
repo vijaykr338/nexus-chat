@@ -59,6 +59,7 @@ model Conversation {
   messages     Message[]
 
   @@index([type, name])
+  @@index([name])
   //the type, name order here is crucial
 }
 
@@ -84,6 +85,19 @@ enum Role {
   ADMIN
   MEMBER
 }
+
+//explaination about the Message and MessageStatus tables
+
+//Message contains the senderID, the creator of the message 
+//MessageStatus decides what each user who has recieved this message
+//have they seen it or not seen it 
+//the creator does not need a STATUS row
+// Message:
+// A sends: "hello"
+// Status:
+// B → ✔✔ delivered
+// C → ✔✔ blue (seen)
+// D → ✔ sent only
 
 model Message {
   id             String   @id @default(uuid())
@@ -125,8 +139,9 @@ model MessageStatus {
   message Message @relation(fields: [messageId], references: [id])
 
   @@unique([messageId, userId])
-  @@index([userId, status])
   //good for finding messages which are unread
+  //crucial for finding everything 
+  @@index([userId, status])
   
 }
 

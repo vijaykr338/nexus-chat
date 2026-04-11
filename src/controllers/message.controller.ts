@@ -1,7 +1,6 @@
 import type { Request, Response } from "express";
-import { createMessage } from "../services/message.service.js";
+import { createMessage, markConversationAsSeen } from "../services/message.service.js";
 import { getIO } from "../config/socket.js";
-import { prisma } from "../config/db.js";
 
 export async function sendMessage(req: Request, res: Response) {
   try {
@@ -14,42 +13,31 @@ export async function sendMessage(req: Request, res: Response) {
       senderId,
       type,
       content,
-      fileUrl
+      fileUrl,
     });
 
     const io = getIO();
-    message.conversation.participants.forEach((p) => {
-        if(p.userId !== senderId){
-            //send to everyone except the sender
-            io.to(p.userId)
-            .emit("recieve_message", message);
 
-            console.log("Emitting to:", p.userId);
-        }
-    })
+    // emit to entire conversation room EXCEPT sender
+    io.to(conversationId).emit("receive_message", message);
 
     res.json(message);
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }
 }
+//get conversations for a user
+//send message 
+//get all messages
 
 export async function markAsSeen(req: Request, res: Response) {
   try {
     const userId = req.user!.id;
     const { conversationId } = req.body;
 
-    await prisma.messageStatus.updateMany({
-      where: {
-        userId,
-        status: "DELIVERED",
-        message: {
-          conversationId
-        }
-      },
-      data: {
-        status: "SEEN"
-      }
+    await markConversationAsSeen({
+      userId,
+      conversationId,
     });
 
     res.json({ success: true });
