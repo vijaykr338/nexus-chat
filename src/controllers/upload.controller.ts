@@ -13,13 +13,25 @@ export async function uploadFile(req: Request, res: Response) {
     const base64 = file.buffer.toString("base64");
     const dataURI = `data:${file.mimetype};base64,${base64}`;
 
+    const isImage = file.mimetype.startsWith("image/");
+    const isVideo = file.mimetype.startsWith("video/");
+    const isAudio = file.mimetype.startsWith("audio/");
+
+    // Cloudinary serves documents like PDF more reliably via raw delivery.
+    const resourceType = isImage
+      ? "image"
+      : isVideo || isAudio
+        ? "video"
+        : "raw";
+
     const result = await cloudinary.uploader.upload(dataURI, {
-      resource_type: "auto"
+      resource_type: resourceType
     });
 
     res.json({
       url: result.secure_url,
-      public_id: result.public_id
+      public_id: result.public_id,
+      resource_type: result.resource_type,
     });
 
   } catch (err) {

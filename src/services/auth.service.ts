@@ -11,8 +11,10 @@ export async function registerUser(username: string, email:string,  password: st
         }
     });
 
+    const { password: _password, ...safeUser } = user;
+
     const token = generateToken(user.id);
-    return { user, token };
+    return { user: safeUser, token };
 }
 
 export async function loginUser(email: string, password: string) {
@@ -29,7 +31,9 @@ export async function loginUser(email: string, password: string) {
         throw new Error("Invalid password");
     }
 
+    const { password: _password, ...safeUser } = user;
+
     const token = generateToken(user.id);
-    return { user, token };
+    return { user: safeUser, token };
 
 }

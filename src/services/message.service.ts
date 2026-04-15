@@ -31,6 +31,7 @@ export async function createMessage({
     //notice here double include is needed to get the participants of the conversation along with the message,
     // because we need to know the participants to send real-time updates to them.
     include: {
+      sender: true,
       conversation: {
         include: {
           participants: true,

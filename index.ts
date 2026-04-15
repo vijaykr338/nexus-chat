@@ -7,23 +7,40 @@ import { initSocket } from './src/config/socket.js';
 import uploadRoutes from './src/routes/upload.routes.js';
 import searchRoutes from './src/routes/search.routes.js';
 import conversationsRoutes from './src/routes/conversations.routes.js';
+import cors from 'cors';
+
+const PORT = process.env.PORT || 3001;
 
 const app = express();
+
+// Parse CORS origins from environment variable
+const corsOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim())
+  : ['http://localhost:3000', 'http://localhost:3001'];
+
+// CORS Configuration
+app.use(cors({
+  origin: corsOrigins,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-//middleware to parse json
-app.use('/auth', authRoutes);
-app.use("/upload", uploadRoutes);
-app.use("/search", searchRoutes);
-app.use("/conversations", conversationsRoutes);
+// API Routes with /api prefix
+app.use('/api/auth', authRoutes);
+app.use("/api/upload", uploadRoutes);
+app.use("/api/search", searchRoutes);
+app.use("/api/conversations", conversationsRoutes);
 
-//routes
+// Health check routes
 app.get('/', (req : Request, res : Response) => {
     res.send("Server is running");
 });
 
-app.get('/me', authMiddleware, (req : Request, res : Response) => {
+app.get('/api/me', authMiddleware, (req : Request, res : Response) => {
     res.json({
         user: req.user
     })
@@ -32,6 +49,7 @@ app.get('/me', authMiddleware, (req : Request, res : Response) => {
 const server = http.createServer(app);
 initSocket(server);
 
-server.listen(3000, () => {    
-    console.log("Server + Socket is running at 3000");
+const HOST = process.env.HOST || 'localhost';
+server.listen(PORT, () => {    
+    console.log(`Server + Socket is running at http://localhost:${PORT}`);
 })
