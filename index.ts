@@ -51,7 +51,6 @@ app.get('/api/me', authMiddleware, (req : Request, res : Response) => {
 const server = http.createServer(app);
 initSocket(server);
 
-const HOST = process.env.HOST || 'localhost';
 server.listen(PORT, () => {    
     console.log(`Server + Socket is running at http://localhost:${PORT}`);
 })
