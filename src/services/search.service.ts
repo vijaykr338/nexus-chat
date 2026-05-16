@@ -14,45 +14,63 @@ export async function searchUsers(query: string) {
   });
 }
 
-export async function searchConversations(userId: string, query: string) {
+export async function searchConversations(
+  userId: string,
+  query: string,
+  type?: "DIRECT" | "GROUP",
+) {
+  const normalizedQuery = query.trim();
+
   return prisma.conversation.findMany({
-    //I want to search for convo with my searchID and whoever else is there, group or direct 
-    //but the structure should be me + other guy/people
+    // Direct conversations should stay user-scoped, but group discovery can be global.
     where: {
-      participants: {
-        some: {
-          userId
-        }
-      },
-      //find the name of convo, direct or group
-      OR: [
-        {
-          name: {
-            contains: query,
-            mode: "insensitive"
+      ...(type ? { type } : {}),
+      ...(type === "GROUP"
+        ? {
+            name: {
+              startsWith: normalizedQuery,
+              mode: "insensitive",
+            },
           }
-        },
-        {
-          participants: {
-            some: {
-              user: {
-                username: {
-                  contains: query,
-                  mode: "insensitive"
-                }
-              }
-            }
+        : {
+            OR: [
+              {
+                name: {
+                  contains: normalizedQuery,
+                  mode: "insensitive",
+                },
+              },
+              {
+                participants: {
+                  some: {
+                    user: {
+                      username: {
+                        contains: normalizedQuery,
+                        mode: "insensitive",
+                      },
+                    },
+                  },
+                },
+              },
+            ],
+          }),
+      ...(type !== "GROUP"
+        ? {
+            participants: {
+              some: {
+                userId,
+              },
+            },
           }
-        }
-      ]
+        : {}),
     },
     include: {
       participants: {
         include: {
-          user: true
-        }
-      }
+          user: true,
+        },
+      },
     },
-    take: 10
+    take: 10,
   });
 }

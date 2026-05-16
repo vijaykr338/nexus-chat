@@ -29,11 +29,31 @@ model User {
   @@index([username])
 }
 
+//adding friend requests into the picture
+
+model GroupJoinRequest {
+  id             String   @id @default(uuid())
+  userId         String
+  conversationId String
+  status         RequestStatus
+  createdAt      DateTime @default(now())
+
+  @@unique([userId, conversationId])
+}
+
+model Friendship {
+  id      String @id @default(uuid())
+  user1Id String
+  user2Id String
+
+  @@unique([user1Id, user2Id])
+}
+
 model FriendRequest {
   id          String   @id @default(uuid())
   senderId    String
   receiverId  String
-  status      FriendStatus
+  status      RequestStatus
   createdAt   DateTime @default(now())
 
   sender      User @relation("SentRequests", fields: [senderId], references: [id])
@@ -43,7 +63,7 @@ model FriendRequest {
   @@index([receiverId, status])
 }
 
-enum FriendStatus{
+enum RequestStatus{
   PENDING
   ACCEPTED
   REJECTED

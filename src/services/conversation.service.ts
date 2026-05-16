@@ -117,6 +117,23 @@ export async function getConversations(userId: string) {
 
   const result = await Promise.all(
     conversations.map(async (conv) => {
+      let conversationName = conv.name;
+
+      if (conv.type === "DIRECT") {
+        const otherParticipant = conv.participants.find(
+          (participant) => participant.userId !== userId
+        );
+
+        if (otherParticipant) {
+          const otherUser = await prisma.user.findUnique({
+            where: { id: otherParticipant.userId },
+            select: { username: true },
+          });
+
+          conversationName = otherUser?.username ?? conversationName;
+        }
+      }
+
       const unreadCount = await prisma.messageStatus.count({
         where: {
           userId,
@@ -132,7 +149,7 @@ export async function getConversations(userId: string) {
       return {
         id: conv.id,
         type: conv.type,
-        name: conv.name,
+        name: conversationName,
         participants: conv.participants,
         lastMessage: conv.messages[0] || null,
         unreadCount,

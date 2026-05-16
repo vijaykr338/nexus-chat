@@ -7,6 +7,7 @@ import { initSocket } from './src/config/socket.js';
 import uploadRoutes from './src/routes/upload.routes.js';
 import searchRoutes from './src/routes/search.routes.js';
 import conversationsRoutes from './src/routes/conversations.routes.js';
+import friendsRoutes from './src/routes/friends.routes.js';
 import cors from 'cors';
 
 const PORT = process.env.PORT || 3001;
@@ -16,7 +17,7 @@ const app = express();
 // Parse CORS origins from environment variable
 const corsOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim())
-  : ['http://localhost:3000', 'http://localhost:3001'];
+  : ['http://localhost:3000', 'http://localhost:3001', ];
 
 // CORS Configuration
 app.use(cors({
@@ -34,6 +35,7 @@ app.use('/api/auth', authRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/search", searchRoutes);
 app.use("/api/conversations", conversationsRoutes);
+app.use("/api/friends", friendsRoutes);
 
 // Health check routes
 app.get('/', (req : Request, res : Response) => {

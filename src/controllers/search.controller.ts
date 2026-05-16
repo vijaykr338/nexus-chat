@@ -27,6 +27,9 @@ export async function searchConversationsController(
 ) {
   try {
     const q = (req.query.q as string | undefined)?.trim();
+    const type = req.query.type === "GROUP" || req.query.type === "DIRECT"
+      ? (req.query.type as "GROUP" | "DIRECT")
+      : undefined;
     const userId = req.user?.id;
 
     if (!userId) {
@@ -37,7 +40,7 @@ export async function searchConversationsController(
       return res.json([]);
     }
 
-    const results = await searchConversations(userId, q);
+    const results = await searchConversations(userId, q, type);
     return res.json(results);
   } catch (error) {
     return res.status(500).json({ error: (error as Error).message });
